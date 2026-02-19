@@ -207,9 +207,6 @@ export default function DashboardPage() {
                       onChange={(e) => setPaperForm({ ...paperForm, otherAuthors: e.target.value })}
                       required
                     />
-                    <div className="mt-1 text-xs text-white/60">
-                      Format: "Name - Year of Study, Degree - Contact Number". Type NA if not applicable.
-                    </div>
                   </div>
 
                     <div className="card p-5">
