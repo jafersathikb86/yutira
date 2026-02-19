@@ -14,7 +14,7 @@ export default function HomePage() {
 
           <div className="mt-8 flex flex-col md:flex-row items-center justify-center gap-6">
             <Image
-              src="/yutira-logo-2.jpg"
+              src="/yutira-logo.jpeg"
               alt="Yutira 2026"
               width={460}
               height={260}
@@ -47,7 +47,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <Section title="Quick Schedule" subtitle="Tentative plan (confirmed for 2026)">
+      <Section title="Quick Schedule" subtitle="">
         <div className="grid md:grid-cols-2 gap-4">
           <div className="card p-5">
             <div className="font-semibold">Day 1 (27.03.2026)</div>

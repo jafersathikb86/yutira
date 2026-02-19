@@ -28,16 +28,16 @@ export default function Navbar() {
       <div className="mx-auto max-w-6xl px-4 py-3 flex items-center gap-3">
         <Link href="/" className="flex items-center gap-2 min-w-0">
           <Image
-            src="/yutira-logo.jpeg"
+            src="/psg-logo.jpeg"
             alt="Yutira 2026"
-            width={40}
-            height={40}
+            width={250}
+            height={100}
             className="rounded-lg shrink-0"
             priority
           />
           <div className="leading-tight min-w-0">
-            <div className="font-semibold truncate">Yutira 2026</div>
-            <div className="text-xs text-white/70 truncate">Civil Engineering • PSG Tech</div>
+            <div className="font-semibold truncate">PSG College Of Technology</div>
+            <div className="text-xs text-white/70 truncate">Yutira 2026 </div>
           </div>
         </Link>
 
