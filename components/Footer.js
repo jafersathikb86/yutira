@@ -6,7 +6,7 @@ export default function Footer() {
       <div className="mx-auto max-w-6xl px-4 py-10 grid md:grid-cols-3 gap-8">
         <div>
           <div className="flex items-center gap-3">
-            <Image src="/yutira-logo.jpeg" alt="Yutira 2026" width={44} height={44} className="rounded-xl" />
+            <Image src="/yutira-logo.jpeg" alt="Yutira 2026" width={125} height={100} className="rounded-xl" />
             <div>
               <div className="font-semibold">Yutira 2026</div>
               <div className="text-sm text-white/70">Department of Civil Engineering,<br/>
