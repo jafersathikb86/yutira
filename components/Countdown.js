@@ -42,16 +42,16 @@ export default function Countdown({ targetISO }) {
   ];
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-md mx-auto px-2">
+    <div className="grid grid-cols-4 gap-2 max-w-md mx-auto px-2">
       {items.map((i) => (
         <div
           key={i.label}
-          className="card h-[90px] sm:h-auto w-full flex flex-col items-center justify-center text-center"
+          className="card w-full px-2 py-2 flex flex-col items-center justify-center text-center"
         >
-          <div className="text-2xl sm:text-3xl font-semibold leading-none">
+          <div className="text-lg sm:text-3xl font-semibold leading-none">
             {i.value}
           </div>
-          <div className="text-xs sm:text-sm text-white/70 mt-2 leading-none">
+          <div className="text-[10px] sm:text-sm text-white/70 mt-1 leading-none">
             {i.label}
           </div>
         </div>
