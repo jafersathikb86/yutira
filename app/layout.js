@@ -4,7 +4,10 @@ import Footer from '@/components/Footer';
 
 export const metadata = {
   title: 'Yutira 2026 - Civil Engineering Association',
-  description: 'National level technical symposium by Department of Civil Engineering, PSG College of Technology.'
+  description: 'National level technical symposium by Department of Civil Engineering, PSG College of Technology.',
+  icons: {
+    icon: "/icon.png",
+  },
 };
 
 export default function RootLayout({ children }) {

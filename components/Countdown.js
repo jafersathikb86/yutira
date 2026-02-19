@@ -26,7 +26,9 @@ export default function Countdown({ targetISO }) {
     return (
       <div className="text-center">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/10 border border-white/15">
-          <span className="text-sm text-white/80">YUTIRA 2026 is Live!</span>
+          <span className="text-sm text-white/80">
+            YUTIRA 2026 is Live!
+          </span>
         </div>
       </div>
     );
@@ -39,15 +41,21 @@ export default function Countdown({ targetISO }) {
     { label: 'Secs', value: pad(seconds) },
   ];
 
-    return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-md mx-auto">
-      {items.map(i => (
-        <div key={i.label} className="card px-3 py-3 text-center w-full">
-          <div className="text-xl sm:text-2xl font-semibold leading-none">
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-md mx-auto px-2">
+      {items.map((i) => (
+        <div
+          key={i.label}
+          className="card h-[90px] sm:h-auto w-full flex flex-col items-center justify-center text-center"
+        >
+          <div className="text-2xl sm:text-3xl font-semibold leading-none">
             {i.value}
-            </div>
-            <div className="text-xs text-white/70 mt-1">{i.label}</div>
-            </div>
-          ))}
           </div>
-          );}
+          <div className="text-xs sm:text-sm text-white/70 mt-2 leading-none">
+            {i.label}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
