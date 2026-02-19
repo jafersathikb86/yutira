@@ -22,7 +22,7 @@ export async function POST(req) {
   user.resetTokenExpiresAt = new Date(Date.now() + 1000 * 60 * 30); // 30 minutes
   await user.save();
 
-  const baseUrl = process.env.APP_URL || 'http://localhost:3000';
+  const baseUrl = process.env.APP_URL || 'https://yutira.vercel.app/';
   const resetUrl = `${baseUrl}/reset-password/${token}`;
 
   const contentHtml =

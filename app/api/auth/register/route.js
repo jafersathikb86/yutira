@@ -60,7 +60,7 @@ export async function POST(req) {
     emailVerified: false
   });
 
-  const baseUrl = process.env.APP_URL || 'http://localhost:3000';
+  const baseUrl = process.env.APP_URL || 'https://yutira.vercel.app/';
   const verifyUrl = `${baseUrl}/api/auth/verify?token=${token}`;
 
   const contentHtml =
