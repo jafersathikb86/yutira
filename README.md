@@ -1,6 +1,6 @@
 ## Project Overview
 
-This is a full-stack web application built using:
+This is a full-stack web application built for event management using:
 
 * Next.js (App Router)
 * Node.js
