@@ -35,7 +35,6 @@ export default function ContactPage() {
             <div className="font-semibold">Developer</div>
             <div className="mt-2 text-sm text-white/80">
               <div className="text-white/90 font-semibold">Jafer Sathik B</div>
-              <div>8428122334</div>
             </div>
           </div>
         </div>
