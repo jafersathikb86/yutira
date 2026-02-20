@@ -6,7 +6,7 @@ import Section from '@/components/Section';
 export default function AdminPage() {
   const [me, setMe] = useState(null);
 
-  // NEW: Overview + Papers
+  // Overview + Papers
   const [overview, setOverview] = useState(null);
   const [papers, setPapers] = useState([]);
   const [paperStatus, setPaperStatus] = useState('');
@@ -14,6 +14,9 @@ export default function AdminPage() {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [status, setStatus] = useState('');
+
+  // NEW: quick filter state
+  const [activeFilter, setActiveFilter] = useState('');
 
   useEffect(() => {
     (async () => {
@@ -29,18 +32,16 @@ export default function AdminPage() {
     })();
   }, []);
 
-  // NEW
   async function loadOverview() {
     try {
       const res = await fetch('/api/admin/overview');
       const data = await res.json();
       if (res.ok) setOverview(data);
     } catch {
-      // ignore (UI still works)
+      // ignore
     }
   }
 
-  // NEW
   async function loadPapers() {
     setPaperStatus('Loading papers…');
     try {
@@ -62,10 +63,35 @@ export default function AdminPage() {
     window.location.href = '/login';
   }
 
-  async function search() {
-    setStatus('Searching…');
-    const res = await fetch(`/api/admin/search?q=${encodeURIComponent(query)}`);
+  // NEW: run quick filter
+  async function runFilter(filterKey) {
+    setActiveFilter(filterKey);
+    setStatus('Filtering…');
+
+    const res = await fetch(
+      `/api/admin/search?filter=${encodeURIComponent(filterKey)}&q=${encodeURIComponent(query)}`
+    );
     const data = await res.json();
+
+    if (res.ok) {
+      setResults(data.results || []);
+      setStatus(`Found ${data.results?.length || 0}`);
+    } else {
+      setStatus(data?.error || 'Filter failed');
+    }
+  }
+
+  // Modified: search respects active filter (if any)
+  async function search() {
+    setStatus(activeFilter ? 'Searching in filter…' : 'Searching…');
+
+    const url = activeFilter
+      ? `/api/admin/search?filter=${encodeURIComponent(activeFilter)}&q=${encodeURIComponent(query)}`
+      : `/api/admin/search?q=${encodeURIComponent(query)}`;
+
+    const res = await fetch(url);
+    const data = await res.json();
+
     if (res.ok) {
       setResults(data.results || []);
       setStatus(`Found ${data.results?.length || 0}`);
@@ -86,7 +112,7 @@ export default function AdminPage() {
       return;
     }
     await search();
-    await loadOverview(); // NEW: keep counts updated
+    await loadOverview();
   }
 
   async function setAttendance(userId, day, value) {
@@ -116,8 +142,8 @@ export default function AdminPage() {
       return;
     }
     alert('Updated.');
-    await loadPapers();    // NEW: refresh paper list
-    await loadOverview();  // NEW: refresh counts
+    await loadPapers();
+    await loadOverview();
   }
 
   if (!me) {
@@ -133,7 +159,7 @@ export default function AdminPage() {
       title="Admin Dashboard"
       subtitle="Search participants, verify payments, mark attendance. Paper decisions are managed in the Paper Submissions section."
     >
-      {/* NEW: Overview counters */}
+      {/* Overview counters */}
       {overview && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
           <div className="card p-4">
@@ -166,7 +192,68 @@ export default function AdminPage() {
           </button>
         </div>
 
-        {/* Search (exports removed) */}
+        {/* NEW: Quick Filters */}
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button
+            onClick={() => runFilter('general_pending')}
+            className={`px-3 py-1 rounded-lg text-xs border ${
+              activeFilter === 'general_pending'
+                ? 'bg-yellow-500/25 border-yellow-300/40'
+                : 'bg-yellow-500/15 border-yellow-300/30 hover:bg-yellow-500/20'
+            }`}
+          >
+            General Pending
+          </button>
+
+          <button
+            onClick={() => runFilter('workshop_pending')}
+            className={`px-3 py-1 rounded-lg text-xs border ${
+              activeFilter === 'workshop_pending'
+                ? 'bg-yellow-500/25 border-yellow-300/40'
+                : 'bg-yellow-500/15 border-yellow-300/30 hover:bg-yellow-500/20'
+            }`}
+          >
+            Workshop Pending
+          </button>
+
+          <button
+            onClick={() => runFilter('day1_not_marked')}
+            className={`px-3 py-1 rounded-lg text-xs border ${
+              activeFilter === 'day1_not_marked'
+                ? 'bg-red-500/25 border-red-400/40'
+                : 'bg-red-500/15 border-red-400/30 hover:bg-red-500/20'
+            }`}
+          >
+            Day 1 Not Marked
+          </button>
+
+          <button
+            onClick={() => runFilter('day2_not_marked')}
+            className={`px-3 py-1 rounded-lg text-xs border ${
+              activeFilter === 'day2_not_marked'
+                ? 'bg-red-500/25 border-red-400/40'
+                : 'bg-red-500/15 border-red-400/30 hover:bg-red-500/20'
+            }`}
+          >
+            Day 2 Not Marked
+          </button>
+
+          {/* Clear filter */}
+          {activeFilter ? (
+            <button
+              onClick={() => {
+                setActiveFilter('');
+                setResults([]);
+                setStatus('Filter cleared');
+              }}
+              className="px-3 py-1 rounded-lg text-xs border border-white/20 bg-white/5 hover:bg-white/10"
+            >
+              Clear Filter
+            </button>
+          ) : null}
+        </div>
+
+        {/* Search */}
         <div className="mt-4 flex flex-col md:flex-row gap-3">
           <input
             className="flex-1 px-3 py-3 rounded-xl bg-white/5 border border-white/15"
@@ -191,9 +278,7 @@ export default function AdminPage() {
                 <div>
                   <div className="font-semibold">
                     {u.name}{' '}
-                    <span className="text-white/60 text-sm">
-                      ({u.yutiraId})
-                    </span>
+                    <span className="text-white/60 text-sm">({u.yutiraId})</span>
                   </div>
                   <div className="text-sm text-white/70">
                     {u.email} • {u.phone}
@@ -209,7 +294,7 @@ export default function AdminPage() {
               </div>
 
               <div className="mt-4 grid md:grid-cols-3 gap-3 text-sm">
-                {/* Payment (unchanged) */}
+                {/* Payment */}
                 <div className="card p-4">
                   <div className="font-semibold">Payment</div>
                   <div className="mt-2 flex items-center justify-between">
@@ -231,7 +316,7 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                {/* Attendance (unchanged) */}
+                {/* Attendance */}
                 <div className="card p-4">
                   <div className="font-semibold">Attendance</div>
                   <div className="mt-2 flex items-center justify-between">
@@ -253,7 +338,7 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                {/* Paper (buttons removed; only info) */}
+                {/* Paper info */}
                 <div className="card p-4">
                   <div className="font-semibold">Paper</div>
                   <div className="mt-2 text-xs text-white/70">
@@ -270,7 +355,7 @@ export default function AdminPage() {
         </div>
       </div>
 
-      {/* NEW: Separate paper submissions section */}
+      {/* Paper Submissions */}
       <div className="card p-6 mt-6">
         <div className="flex items-center justify-between gap-3">
           <div>
