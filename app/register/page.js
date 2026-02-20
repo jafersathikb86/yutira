@@ -25,16 +25,13 @@ export default function RegisterPage() {
     workshop: false
   });
 
-  // NEW: toggle for manual college entry (moves "not listed" outside)
-  const [useOtherCollege, setUseOtherCollege] = useState(false);
-
   const [status, setStatus] = useState({ type: '', message: '' });
   const [submitting, setSubmitting] = useState(false);
+  const [collegeQuery, setCollegeQuery] = useState('');
 
-  const isPSG = useMemo(
-    () => form.email.toLowerCase().endsWith(psgEmailSuffix),
-    [form.email]
-  );
+  const useOtherCollege = form.college === '__other__';
+
+  const isPSG = useMemo(() => form.email.toLowerCase().endsWith(psgEmailSuffix), [form.email]);
 
   const feePreview = useMemo(() => {
     let total = 0;
@@ -42,6 +39,12 @@ export default function RegisterPage() {
     if (form.workshop) total += fees.workshop;
     return total;
   }, [form.general, form.workshop, isPSG]);
+
+  const filteredColleges = useMemo(() => {
+    const q = collegeQuery.trim().toLowerCase();
+    if (!q) return colleges;
+    return colleges.filter((c) => c.toLowerCase().includes(q));
+  }, [collegeQuery]);
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -52,10 +55,11 @@ export default function RegisterPage() {
       return;
     }
 
-    // NEW: ensure college is correctly picked from either field
-    const finalCollege = (useOtherCollege ? form.otherCollege : form.college).trim();
+    const finalCollege =
+      form.college === '__other__' ? form.otherCollege.trim() : form.college.trim();
+
     if (!finalCollege) {
-      setStatus({ type: 'error', message: 'Please enter your college/university.' });
+      setStatus({ type: 'error', message: 'Please enter/select your college.' });
       return;
     }
 
@@ -90,16 +94,16 @@ export default function RegisterPage() {
   return (
     <Section
       title="Register for Yutira 2026"
-      subtitle={`Event registration last date: 26 March 2026. General registration covers all events + paper presentation. Workshop is separate.`}
+      subtitle="Event registration last date: 26 March 2026. General registration covers all events + paper presentation. Workshop is separate."
     >
       <div className="card p-6">
-        {isClosed() ? (
+        {isClosed() && (
           <div className="mb-4 p-3 rounded-xl bg-red-500/15 border border-red-400/30 text-sm text-red-100">
             Registrations are closed.
           </div>
-        ) : null}
+        )}
 
-        {status.message ? (
+        {status.message && (
           <div
             className={`mb-4 p-3 rounded-xl text-sm border ${
               status.type === 'success'
@@ -109,7 +113,7 @@ export default function RegisterPage() {
           >
             {status.message}
           </div>
-        ) : null}
+        )}
 
         <form onSubmit={onSubmit} className="grid md:grid-cols-2 gap-4">
           <div>
@@ -158,7 +162,6 @@ export default function RegisterPage() {
             />
           </div>
 
-          {/* ✅ UPDATED: Searchable college + "not listed" outside */}
           <div>
             <label className="text-sm text-white/80">
               College/University <span className="text-red-300">*</span>
@@ -168,17 +171,27 @@ export default function RegisterPage() {
               <>
                 <input
                   className="mt-2 w-full px-3 py-3 rounded-xl bg-white/5 border border-white/15"
-                  placeholder="Type to search your college…"
-                  list="college-list"
+                  placeholder="Search college…"
+                  value={collegeQuery}
+                  onChange={(e) => setCollegeQuery(e.target.value)}
+                  autoComplete="off"
+                />
+
+                <select
+                  className="mt-2 w-full px-3 py-3 rounded-xl bg-white/5 border border-white/15"
                   value={form.college}
                   onChange={(e) => setForm({ ...form, college: e.target.value })}
                   required
-                />
-                <datalist id="college-list">
-                  {colleges.map((c) => (
-                    <option key={c} value={c} />
+                >
+                  <option value="" disabled>
+                    Select…
+                  </option>
+                  {filteredColleges.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
                   ))}
-                </datalist>
+                </select>
               </>
             ) : (
               <input
@@ -195,10 +208,12 @@ export default function RegisterPage() {
                 type="checkbox"
                 checked={useOtherCollege}
                 onChange={(e) => {
-                  const checked = e.target.checked;
-                  setUseOtherCollege(checked);
-                  if (checked) setForm((prev) => ({ ...prev, college: '' }));
-                  else setForm((prev) => ({ ...prev, otherCollege: '' }));
+                  if (e.target.checked) {
+                    setForm((prev) => ({ ...prev, college: '__other__', otherCollege: '' }));
+                    setCollegeQuery('');
+                  } else {
+                    setForm((prev) => ({ ...prev, college: '', otherCollege: '' }));
+                  }
                 }}
               />
               My college is not listed above (enter manually)
@@ -215,13 +230,9 @@ export default function RegisterPage() {
               onChange={(e) => setForm({ ...form, department: e.target.value })}
               required
             >
-              <option value="" disabled>
-                Select…
-              </option>
+              <option value="" disabled>Select…</option>
               {departments.map((d) => (
-                <option key={d} value={d}>
-                  {d}
-                </option>
+                <option key={d} value={d}>{d}</option>
               ))}
             </select>
           </div>
@@ -236,13 +247,9 @@ export default function RegisterPage() {
               onChange={(e) => setForm({ ...form, year: e.target.value })}
               required
             >
-              <option value="" disabled>
-                Select a year
-              </option>
+              <option value="" disabled>Select a year</option>
               {years.map((y) => (
-                <option key={y} value={y}>
-                  {y}
-                </option>
+                <option key={y} value={y}>{y}</option>
               ))}
             </select>
           </div>
