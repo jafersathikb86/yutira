@@ -5,6 +5,12 @@ import Section from '@/components/Section';
 
 export default function AdminPage() {
   const [me, setMe] = useState(null);
+
+  // NEW: Overview + Papers
+  const [overview, setOverview] = useState(null);
+  const [papers, setPapers] = useState([]);
+  const [paperStatus, setPaperStatus] = useState('');
+
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [status, setStatus] = useState('');
@@ -15,11 +21,41 @@ export default function AdminPage() {
       const data = await res.json();
       if (res.ok && data.role === 'admin') {
         setMe(data);
+        loadOverview();
+        loadPapers();
       } else {
         window.location.href = '/login';
       }
     })();
   }, []);
+
+  // NEW
+  async function loadOverview() {
+    try {
+      const res = await fetch('/api/admin/overview');
+      const data = await res.json();
+      if (res.ok) setOverview(data);
+    } catch {
+      // ignore (UI still works)
+    }
+  }
+
+  // NEW
+  async function loadPapers() {
+    setPaperStatus('Loading papers…');
+    try {
+      const res = await fetch('/api/admin/papers-list');
+      const data = await res.json();
+      if (res.ok) {
+        setPapers(data.papers || []);
+        setPaperStatus(`Loaded ${data.papers?.length || 0} submissions`);
+      } else {
+        setPaperStatus(data?.error || 'Failed to load papers');
+      }
+    } catch {
+      setPaperStatus('Failed to load papers');
+    }
+  }
 
   async function logout() {
     await fetch('/api/auth/logout', { method: 'POST' });
@@ -50,6 +86,7 @@ export default function AdminPage() {
       return;
     }
     await search();
+    await loadOverview(); // NEW: keep counts updated
   }
 
   async function setAttendance(userId, day, value) {
@@ -79,6 +116,8 @@ export default function AdminPage() {
       return;
     }
     alert('Updated.');
+    await loadPapers();    // NEW: refresh paper list
+    await loadOverview();  // NEW: refresh counts
   }
 
   if (!me) {
@@ -92,8 +131,30 @@ export default function AdminPage() {
   return (
     <Section
       title="Admin Dashboard"
-      subtitle="Search participants, verify payments, mark attendance, manage paper decisions."
+      subtitle="Search participants, verify payments, mark attendance. Paper decisions are managed in the Paper Submissions section."
     >
+      {/* NEW: Overview counters */}
+      {overview && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+          <div className="card p-4">
+            <div className="text-xs text-white/70">Total Registrations</div>
+            <div className="text-2xl font-semibold mt-1">{overview.totalUsers}</div>
+          </div>
+          <div className="card p-4">
+            <div className="text-xs text-white/70">General Paid</div>
+            <div className="text-2xl font-semibold mt-1">{overview.generalPaid}</div>
+          </div>
+          <div className="card p-4">
+            <div className="text-xs text-white/70">Workshop Paid</div>
+            <div className="text-2xl font-semibold mt-1">{overview.workshopPaid}</div>
+          </div>
+          <div className="card p-4">
+            <div className="text-xs text-white/70">Paper Submissions</div>
+            <div className="text-2xl font-semibold mt-1">{overview.totalPapers}</div>
+          </div>
+        </div>
+      )}
+
       <div className="card p-6">
         <div className="flex items-center justify-between gap-3">
           <div className="text-sm text-white/70">Logged in as admin</div>
@@ -105,7 +166,7 @@ export default function AdminPage() {
           </button>
         </div>
 
-        {/* Search + Export */}
+        {/* Search (exports removed) */}
         <div className="mt-4 flex flex-col md:flex-row gap-3">
           <input
             className="flex-1 px-3 py-3 rounded-xl bg-white/5 border border-white/15"
@@ -119,24 +180,6 @@ export default function AdminPage() {
           >
             Search
           </button>
-
-          {/* Existing CSV Export */}
-          <a
-            href="/api/admin/export"
-            className="px-4 py-3 rounded-2xl border border-white/20 hover:bg-white/10 text-center"
-            target="_blank"
-          >
-            Export CSV
-          </a>
-
-          {/* NEW Excel Export */}
-          <a
-            href="/api/admin/export-excel"
-            className="px-4 py-3 rounded-2xl bg-green-500/20 border border-green-400/30 hover:bg-green-500/30 text-center"
-            target="_blank"
-          >
-            Download Excel
-          </a>
         </div>
 
         <div className="mt-2 text-xs text-white/60">{status}</div>
@@ -166,7 +209,7 @@ export default function AdminPage() {
               </div>
 
               <div className="mt-4 grid md:grid-cols-3 gap-3 text-sm">
-                {/* Payment */}
+                {/* Payment (unchanged) */}
                 <div className="card p-4">
                   <div className="font-semibold">Payment</div>
                   <div className="mt-2 flex items-center justify-between">
@@ -188,7 +231,7 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                {/* Attendance */}
+                {/* Attendance (unchanged) */}
                 <div className="card p-4">
                   <div className="font-semibold">Attendance</div>
                   <div className="mt-2 flex items-center justify-between">
@@ -210,16 +253,11 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                {/* Paper */}
+                {/* Paper (buttons removed; only info) */}
                 <div className="card p-4">
                   <div className="font-semibold">Paper</div>
                   <div className="mt-2 text-xs text-white/70">
-                    Decision works if submission exists.
-                  </div>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    <button onClick={() => decidePaper(u.yutiraId, 'accepted')} className="px-2 py-1 rounded-lg bg-green-500/15 border border-green-400/30">Accept</button>
-                    <button onClick={() => decidePaper(u.yutiraId, 'rejected')} className="px-2 py-1 rounded-lg bg-red-500/15 border border-red-400/30">Reject</button>
-                    <button onClick={() => decidePaper(u.yutiraId, 'submitted')} className="px-2 py-1 rounded-lg bg-white/5 border border-white/15">Reset</button>
+                    Paper decisions are managed in the <b>Paper Submissions</b> section below.
                   </div>
                 </div>
               </div>
@@ -229,6 +267,84 @@ export default function AdminPage() {
           {results.length === 0 ? (
             <div className="text-sm text-white/60">No results.</div>
           ) : null}
+        </div>
+      </div>
+
+      {/* NEW: Separate paper submissions section */}
+      <div className="card p-6 mt-6">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <div className="font-semibold">Paper Submissions</div>
+            <div className="text-xs text-white/60">{paperStatus}</div>
+          </div>
+          <button
+            onClick={loadPapers}
+            className="px-3 py-2 rounded-xl border border-white/20 hover:bg-white/10 text-sm"
+          >
+            Refresh
+          </button>
+        </div>
+
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="text-white/70">
+              <tr className="text-left">
+                <th className="py-2 pr-4">Yutira ID</th>
+                <th className="py-2 pr-4">Title</th>
+                <th className="py-2 pr-4">Status</th>
+                <th className="py-2 pr-4">PDF</th>
+                <th className="py-2 pr-4">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {papers.map((p) => (
+                <tr key={p._id} className="border-t border-white/10">
+                  <td className="py-2 pr-4">{p.yutiraId}</td>
+                  <td className="py-2 pr-4">{p.title}</td>
+                  <td className="py-2 pr-4 capitalize">{p.status}</td>
+                  <td className="py-2 pr-4">
+                    {p.pdfUrl ? (
+                      <a className="link" href={p.pdfUrl} target="_blank" rel="noreferrer">
+                        View PDF
+                      </a>
+                    ) : (
+                      <span className="text-white/50">—</span>
+                    )}
+                  </td>
+                  <td className="py-2 pr-4">
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={() => decidePaper(p.yutiraId, 'accepted')}
+                        className="px-2 py-1 rounded-lg bg-green-500/15 border border-green-400/30"
+                      >
+                        Accept
+                      </button>
+                      <button
+                        onClick={() => decidePaper(p.yutiraId, 'rejected')}
+                        className="px-2 py-1 rounded-lg bg-red-500/15 border border-red-400/30"
+                      >
+                        Reject
+                      </button>
+                      <button
+                        onClick={() => decidePaper(p.yutiraId, 'submitted')}
+                        className="px-2 py-1 rounded-lg bg-white/5 border border-white/15"
+                      >
+                        Reset
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+
+              {papers.length === 0 ? (
+                <tr>
+                  <td className="py-3 text-white/60" colSpan={5}>
+                    No paper submissions found.
+                  </td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
         </div>
       </div>
     </Section>

@@ -8,8 +8,9 @@ export async function GET() {
     requireAdmin();
     await dbConnect();
 
+    // Works with either createdAt or submittedAt (whichever exists)
     const papers = await PaperSubmission.find({})
-      .sort({ createdAt: -1 })
+      .sort({ createdAt: -1, submittedAt: -1 })
       .lean();
 
     return NextResponse.json({ papers });

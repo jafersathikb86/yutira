@@ -10,16 +10,11 @@ export async function GET() {
     await dbConnect();
 
     const totalUsers = await User.countDocuments();
-    const generalPaid = await User.countDocuments({ "general.paymentStatus": "paid" });
-    const workshopPaid = await User.countDocuments({ "workshop.paymentStatus": "paid" });
+    const generalPaid = await User.countDocuments({ 'general.paymentStatus': 'paid' });
+    const workshopPaid = await User.countDocuments({ 'workshop.paymentStatus': 'paid' });
     const totalPapers = await PaperSubmission.countDocuments();
 
-    return NextResponse.json({
-      totalUsers,
-      generalPaid,
-      workshopPaid,
-      totalPapers
-    });
+    return NextResponse.json({ totalUsers, generalPaid, workshopPaid, totalPapers });
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
