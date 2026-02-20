@@ -1,122 +1,61 @@
-# YUTIRA 2026 — Full Offline Project
+## Project Overview
 
-This is a full **Next.js + MongoDB** project for Yutira 2026 registration + dashboard + single admin login.
+This is a full-stack web application built using:
 
-## What’s included
+* Next.js (App Router)
+* Node.js
+* MongoDB (Mongoose)
+* JWT Authentication
+* SMTP Email (Nodemailer)
+* Tailwind CSS
 
-- Landing page with **live countdown** (target: **27 Mar 2026, 09:00 IST**)
-- Pages: Events, Workshop, Paper Presentation, Sponsors, About, FAQ, Contact
-- Registration:
-  - General registration (events + paper) and Workshop (separate)
-  - PSG students are detected by email suffix `@psgtech.ac.in`
-  - If user selects both, note is shown: **payment must be done separately**
-  - Registration closes after **26 Mar 2026, 11:59 PM IST**
-- Email workflow (as your admin asked):
-  1) Registration first
-  2) Email verification
-  3) Generate **YUTIRA ID**
-  4) Send payment link email with note: **use same name & mobile**
-  5) Admin verifies payment manually
-- Dashboard:
-  - Shows YUTIRA ID
-  - Shows payment status (general/workshop)
-  - Shows attendance (day 1/day 2)
-  - Shows paper abstract submission status
-  - Displays notice: **External participants must bring ID card and Bonafide certificate**
-- Admin dashboard:
-  - Search by YUTIRA ID / name / email / phone
-  - Mark general/workshop payment paid/pending
-  - Mark attendance Day 1 / Day 2
-  - Accept/Reject paper submission
-  - Export registrations as CSV
-
-## Tech stack
-
-- Next.js (App Router)
-- TailwindCSS
-- MongoDB + Mongoose
-- JWT auth (httpOnly cookie)
-- Nodemailer (SMTP)
+This is **NOT** a static website.
+It requires a Node.js runtime environment.
 
 ---
 
-## How to run (offline)
+## Current Deployment
 
-### 1) Install requirements
+The website is currently deployed and running at:
 
-- Node.js 18+
-- MongoDB (local)
+[https://yutira.vercel.app](https://yutira.vercel.app)
 
-### 2) Setup environment
-
-Copy `.env.example` to `.env` and fill the values.
-
-> You said you will fill `SMTP_PASS` manually — keep it blank until you add it.
-
-If you want to test without email first, set:
-
-```
-EMAIL_ENABLED=false
-```
-
-### 3) Install dependencies
-
-```bash
-npm install
-```
-
-### 4) Start MongoDB
-
-Make sure MongoDB is running and `MONGODB_URI` in `.env` is correct.
-
-### 5) Run the app
-
-```bash
-npm run dev
-```
-
-Open: `http://localhost:3000`
+Deployment is production-ready and fully functional.
 
 ---
 
-## Admin login
+## Server Requirements (If Hosting Internally)
 
-Admin login is a **single login** using:
+Minimum:
 
-- `ADMIN_EMAIL`
-- `ADMIN_PASSWORD`
+* Node.js 18 or higher
+* npm
+* Ability to configure environment variables
+* Outbound internet access to:
 
-in `.env`.
+  * MongoDB (Atlas or internal database)
+  * SMTP server (port 465 or 587)
 
-Login page: `/login`
-Admin dashboard: `/admin`
+## Required Environment Variables
 
----
+These must be configured in production:
 
-## Paper abstract submission
+APP_URL
+MONGODB_URI
+JWT_SECRET
+ADMIN_EMAIL
+ADMIN_PASSWORD
+EMAIL_ENABLED
+SMTP_HOST
+SMTP_PORT
+SMTP_SECURE
+SMTP_USER
+SMTP_PASS
+SMTP_FROM_NAME
 
-In the dashboard, users can submit a **PDF URL** (Drive/Cloud link). For strict upload via server (Cloudinary), add Cloudinary credentials in `.env` and implement an upload route.
+Important:
 
----
-
-## College list
-
-`lib/colleges.js` currently contains a small sample list + "My college not listed" option.
-
-If you want the full dropdown list you shared, paste it into the `colleges` array in `lib/colleges.js`.
-
----
-
-## Project structure
-
-- `app/` Pages + API routes
-- `models/` Mongoose models
-- `lib/` Helpers and constants
-- `components/` UI components
-- `public/` Logo + sponsor images
+* Do NOT commit `.env` files to repository.
+* Ensure `APP_URL` matches production domain.
 
 ---
-
-## Developer
-
-Jafer Sathik B — 8428122334
