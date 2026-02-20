@@ -6,7 +6,6 @@ import Section from '@/components/Section';
 export default function AdminPage() {
   const [me, setMe] = useState(null);
 
-  // Overview + Papers
   const [overview, setOverview] = useState(null);
   const [papers, setPapers] = useState([]);
   const [paperStatus, setPaperStatus] = useState('');
@@ -15,8 +14,12 @@ export default function AdminPage() {
   const [results, setResults] = useState([]);
   const [status, setStatus] = useState('');
 
-  // NEW: quick filter state
+  // Filters + pagination
   const [activeFilter, setActiveFilter] = useState('');
+  const [page, setPage] = useState(1);
+  const limit = 50;
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
     (async () => {
@@ -37,9 +40,7 @@ export default function AdminPage() {
       const res = await fetch('/api/admin/overview');
       const data = await res.json();
       if (res.ok) setOverview(data);
-    } catch {
-      // ignore
-    }
+    } catch {}
   }
 
   async function loadPapers() {
@@ -58,46 +59,36 @@ export default function AdminPage() {
     }
   }
 
-  async function logout() {
-    await fetch('/api/auth/logout', { method: 'POST' });
-    window.location.href = '/login';
-  }
-
-  // NEW: run quick filter
-  async function runFilter(filterKey) {
-    setActiveFilter(filterKey);
-    setStatus('Filtering…');
-
-    const res = await fetch(
-      `/api/admin/search?filter=${encodeURIComponent(filterKey)}&q=${encodeURIComponent(query)}`
-    );
-    const data = await res.json();
-
-    if (res.ok) {
-      setResults(data.results || []);
-      setStatus(`Found ${data.results?.length || 0}`);
-    } else {
-      setStatus(data?.error || 'Filter failed');
-    }
-  }
-
-  // Modified: search respects active filter (if any)
-  async function search() {
-    setStatus(activeFilter ? 'Searching in filter…' : 'Searching…');
-
-    const url = activeFilter
-      ? `/api/admin/search?filter=${encodeURIComponent(activeFilter)}&q=${encodeURIComponent(query)}`
-      : `/api/admin/search?q=${encodeURIComponent(query)}`;
+  async function fetchUsers({ filter = activeFilter, q = query, nextPage = page } = {}) {
+    setStatus(filter ? 'Loading…' : 'Searching…');
+    const url = `/api/admin/search?filter=${encodeURIComponent(filter || '')}&q=${encodeURIComponent(
+      q || ''
+    )}&page=${nextPage}&limit=${limit}`;
 
     const res = await fetch(url);
     const data = await res.json();
 
     if (res.ok) {
       setResults(data.results || []);
-      setStatus(`Found ${data.results?.length || 0}`);
+      setPage(data.page || 1);
+      setTotal(data.total || 0);
+      setTotalPages(data.totalPages || 1);
+      setStatus(`Found ${data.results?.length || 0} (Total ${data.total || 0})`);
     } else {
-      setStatus(data?.error || 'Search failed');
+      setStatus(data?.error || 'Failed');
     }
+  }
+
+  async function runFilter(filterKey) {
+    setActiveFilter(filterKey);
+    setPage(1);
+    await fetchUsers({ filter: filterKey, q: query, nextPage: 1 });
+  }
+
+  async function search() {
+    // keep same filter and reset to page 1
+    setPage(1);
+    await fetchUsers({ filter: activeFilter, q: query, nextPage: 1 });
   }
 
   async function setPayment(userId, kind, paid) {
@@ -111,7 +102,7 @@ export default function AdminPage() {
       alert(data?.error || 'Failed');
       return;
     }
-    await search();
+    await fetchUsers({ nextPage: page });
     await loadOverview();
   }
 
@@ -126,15 +117,15 @@ export default function AdminPage() {
       alert(data?.error || 'Failed');
       return;
     }
-    await search();
+    await fetchUsers({ nextPage: page });
   }
 
-  async function decidePaper(yutiraId, status) {
+  async function decidePaper(yutiraId, statusVal) {
     const remarks = prompt('Remarks (optional):') || '';
     const res = await fetch('/api/admin/paper-decision', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ yutiraId, status, remarks })
+      body: JSON.stringify({ yutiraId, status: statusVal, remarks })
     });
     const data = await res.json();
     if (!res.ok) {
@@ -159,7 +150,6 @@ export default function AdminPage() {
       title="Admin Dashboard"
       subtitle="Search participants, verify payments, mark attendance. Paper decisions are managed in the Paper Submissions section."
     >
-      {/* Overview counters */}
       {overview && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
           <div className="card p-4">
@@ -182,12 +172,19 @@ export default function AdminPage() {
       )}
 
       <div className="card p-6">
-        <div className="flex items-center justify-between gap-3">
-          <div className="text-sm text-white/70">Logged in as admin</div>
-        </div>
+        {/* Quick Filters */}
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => runFilter('all_users')}
+            className={`px-3 py-1 rounded-lg text-xs border ${
+              activeFilter === 'all_users'
+                ? 'bg-white/15 border-white/30'
+                : 'bg-white/5 border-white/20 hover:bg-white/10'
+            }`}
+          >
+            All Registrations
+          </button>
 
-        {/* NEW: Quick Filters */}
-        <div className="mt-4 flex flex-wrap gap-2">
           <button
             onClick={() => runFilter('general_pending')}
             className={`px-3 py-1 rounded-lg text-xs border ${
@@ -232,17 +229,19 @@ export default function AdminPage() {
             Day 2 Not Marked
           </button>
 
-          {/* Clear filter */}
           {activeFilter ? (
             <button
               onClick={() => {
                 setActiveFilter('');
                 setResults([]);
                 setStatus('Filter cleared');
+                setPage(1);
+                setTotal(0);
+                setTotalPages(1);
               }}
               className="px-3 py-1 rounded-lg text-xs border border-white/20 bg-white/5 hover:bg-white/10"
             >
-              Clear Filter
+              Clear
             </button>
           ) : null}
         </div>
@@ -255,40 +254,55 @@ export default function AdminPage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
-          <button
-            onClick={search}
-            className="px-4 py-3 rounded-2xl bg-white text-black font-semibold"
-          >
+          <button onClick={search} className="px-4 py-3 rounded-2xl bg-white text-black font-semibold">
             Search
           </button>
         </div>
 
         <div className="mt-2 text-xs text-white/60">{status}</div>
 
+        {/* Pagination */}
+        {activeFilter === 'all_users' && (
+          <div className="mt-3 flex items-center justify-between text-sm text-white/70">
+            <div>
+              Page {page} / {totalPages} • Total {total}
+            </div>
+            <div className="flex gap-2">
+              <button
+                disabled={page <= 1}
+                onClick={() => fetchUsers({ nextPage: page - 1 })}
+                className="px-3 py-2 rounded-xl border border-white/20 disabled:opacity-40 hover:bg-white/10"
+              >
+                Prev
+              </button>
+              <button
+                disabled={page >= totalPages}
+                onClick={() => fetchUsers({ nextPage: page + 1 })}
+                className="px-3 py-2 rounded-xl border border-white/20 disabled:opacity-40 hover:bg-white/10"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Results (full details already shown) */}
         <div className="mt-6 space-y-4">
           {results.map((u) => (
             <div key={u._id} className="card p-5">
               <div className="flex flex-col md:flex-row md:items-start justify-between gap-3">
                 <div>
                   <div className="font-semibold">
-                    {u.name}{' '}
-                    <span className="text-white/60 text-sm">({u.yutiraId})</span>
+                    {u.name} <span className="text-white/60 text-sm">({u.yutiraId})</span>
                   </div>
-                  <div className="text-sm text-white/70">
-                    {u.email} • {u.phone}
-                  </div>
+                  <div className="text-sm text-white/70">{u.email} • {u.phone}</div>
                   <div className="text-sm text-white/70">{u.college}</div>
-                  <div className="text-sm text-white/70">
-                    {u.department} • Year {u.year}
-                  </div>
+                  <div className="text-sm text-white/70">{u.department} • Year {u.year}</div>
                 </div>
-                <div className="text-xs text-white/60">
-                  Created: {new Date(u.createdAt).toLocaleString()}
-                </div>
+                <div className="text-xs text-white/60">Created: {new Date(u.createdAt).toLocaleString()}</div>
               </div>
 
               <div className="mt-4 grid md:grid-cols-3 gap-3 text-sm">
-                {/* Payment */}
                 <div className="card p-4">
                   <div className="font-semibold">Payment</div>
                   <div className="mt-2 flex items-center justify-between">
@@ -305,12 +319,9 @@ export default function AdminPage() {
                       <button onClick={() => setPayment(u._id, 'workshop', false)} className="px-2 py-1 rounded-lg bg-yellow-500/15 border border-yellow-300/30">Pending</button>
                     </div>
                   </div>
-                  <div className="mt-2 text-xs text-white/70">
-                    Current: General {u.general.paymentStatus} • Workshop {u.workshop.paymentStatus}
-                  </div>
+                  <div className="mt-2 text-xs text-white/70">Current: General {u.general.paymentStatus} • Workshop {u.workshop.paymentStatus}</div>
                 </div>
 
-                {/* Attendance */}
                 <div className="card p-4">
                   <div className="font-semibold">Attendance</div>
                   <div className="mt-2 flex items-center justify-between">
@@ -327,12 +338,9 @@ export default function AdminPage() {
                       <button onClick={() => setAttendance(u._id, 'day2', false)} className="px-2 py-1 rounded-lg bg-white/5 border border-white/15">Unmark</button>
                     </div>
                   </div>
-                  <div className="mt-2 text-xs text-white/70">
-                    Current: Day1 {u.attendance.day1 ? 'Yes' : 'No'} • Day2 {u.attendance.day2 ? 'Yes' : 'No'}
-                  </div>
+                  <div className="mt-2 text-xs text-white/70">Current: Day1 {u.attendance.day1 ? 'Yes' : 'No'} • Day2 {u.attendance.day2 ? 'Yes' : 'No'}</div>
                 </div>
 
-                {/* Paper info */}
                 <div className="card p-4">
                   <div className="font-semibold">Paper</div>
                   <div className="mt-2 text-xs text-white/70">
@@ -343,23 +351,18 @@ export default function AdminPage() {
             </div>
           ))}
 
-          {results.length === 0 ? (
-            <div className="text-sm text-white/60">No results.</div>
-          ) : null}
+          {results.length === 0 ? <div className="text-sm text-white/60">No results.</div> : null}
         </div>
       </div>
 
-      {/* Paper Submissions */}
+      {/* Paper Submissions stays as you already have */}
       <div className="card p-6 mt-6">
         <div className="flex items-center justify-between gap-3">
           <div>
             <div className="font-semibold">Paper Submissions</div>
             <div className="text-xs text-white/60">{paperStatus}</div>
           </div>
-          <button
-            onClick={loadPapers}
-            className="px-3 py-2 rounded-xl border border-white/20 hover:bg-white/10 text-sm"
-          >
+          <button onClick={loadPapers} className="px-3 py-2 rounded-xl border border-white/20 hover:bg-white/10 text-sm">
             Refresh
           </button>
         </div>
@@ -392,29 +395,19 @@ export default function AdminPage() {
                   </td>
                   <td className="py-2 pr-4">
                     <div className="flex flex-wrap gap-2">
-                      <button
-                        onClick={() => decidePaper(p.yutiraId, 'accepted')}
-                        className="px-2 py-1 rounded-lg bg-green-500/15 border border-green-400/30"
-                      >
+                      <button onClick={() => decidePaper(p.yutiraId, 'accepted')} className="px-2 py-1 rounded-lg bg-green-500/15 border border-green-400/30">
                         Accept
                       </button>
-                      <button
-                        onClick={() => decidePaper(p.yutiraId, 'rejected')}
-                        className="px-2 py-1 rounded-lg bg-red-500/15 border border-red-400/30"
-                      >
+                      <button onClick={() => decidePaper(p.yutiraId, 'rejected')} className="px-2 py-1 rounded-lg bg-red-500/15 border border-red-400/30">
                         Reject
                       </button>
-                      <button
-                        onClick={() => decidePaper(p.yutiraId, 'submitted')}
-                        className="px-2 py-1 rounded-lg bg-white/5 border border-white/15"
-                      >
+                      <button onClick={() => decidePaper(p.yutiraId, 'submitted')} className="px-2 py-1 rounded-lg bg-white/5 border border-white/15">
                         Reset
                       </button>
                     </div>
                   </td>
                 </tr>
               ))}
-
               {papers.length === 0 ? (
                 <tr>
                   <td className="py-3 text-white/60" colSpan={5}>
