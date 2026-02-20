@@ -33,7 +33,7 @@ export default function Footer() {
           <div>Rahul G V</div>
           <div>93448 13153</div><br/>
           <div>Vinoth Kumar S</div>
-          <div>80728 99952</div>
+          <div>80728 99952</div><br/>
 <div className="font-semibold text-white mb-2">Developer</div>
 <div>Jafer Sathik B</div>
 </div>
