@@ -171,9 +171,20 @@ export default function RegisterPage() {
               <>
                 <input
                   className="mt-2 w-full px-3 py-3 rounded-xl bg-white/5 border border-white/15"
-                  placeholder="Search college…"
+                  placeholder="Type to search college…"
                   value={collegeQuery}
-                  onChange={(e) => setCollegeQuery(e.target.value)}
+                  onChange={(e) => {
+                    const q = e.target.value;
+                    setCollegeQuery(q);
+
+                    const qq = q.trim().toLowerCase();
+                    const match = qq ? colleges.find((c) => c.toLowerCase().includes(qq)) : '';
+
+                    setForm((prev) => ({
+                      ...prev,
+                      college: match || ''
+                    }));
+                  }}
                   autoComplete="off"
                 />
 
@@ -184,7 +195,7 @@ export default function RegisterPage() {
                   required
                 >
                   <option value="" disabled>
-                    Select…
+                    {collegeQuery.trim() ? 'No match found' : 'Select…'}
                   </option>
                   {filteredColleges.map((c) => (
                     <option key={c} value={c}>
@@ -200,6 +211,7 @@ export default function RegisterPage() {
                 value={form.otherCollege}
                 onChange={(e) => setForm({ ...form, otherCollege: e.target.value })}
                 required
+                autoComplete="off"
               />
             )}
 
@@ -213,6 +225,7 @@ export default function RegisterPage() {
                     setCollegeQuery('');
                   } else {
                     setForm((prev) => ({ ...prev, college: '', otherCollege: '' }));
+                    setCollegeQuery('');
                   }
                 }}
               />
