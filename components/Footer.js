@@ -33,13 +33,14 @@ export default function Footer() {
           <div>Rahul G V</div>
           <div>93448 13153</div><br/>
           <div>Vinoth Kumar S</div>
-          <div>80728 99952</div>          
-        </div>
-      </div>
-
-      <div className="py-4 text-center text-xs text-white/50 border-t border-white/10">
-        © {new Date().getFullYear()} Yutira 2026
-      </div>
+          <div>80728 99952</div>
+<div className="font-semibold text-white mb-2">Developer</div>
+<div>Jafer Sathik B</div>
+</div>
+</div>
+<div className="py-4 text-center text-xs text-white/50 border-t border-white/10">
+        © {new Date().getFullYear()} Yutira
+</div>
     </footer>
   );
 }
