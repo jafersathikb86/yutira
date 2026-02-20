@@ -44,7 +44,6 @@ APP_URL, MONGODB_URI, JWT_SECRET, ADMIN_EMAIL, ADMIN_PASSWORD, EMAIL_ENABLED, SM
 
 Important:
 
-* Do NOT commit `.env` files to repository.
 * Ensure `APP_URL` matches production domain.
 
 ---
