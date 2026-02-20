@@ -20,8 +20,34 @@ export default function Navbar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
+  // NEW: logged-in user info
+  const [me, setMe] = useState(null);
+
   // close menu on route change
   useEffect(() => setOpen(false), [pathname]);
+
+  // NEW: fetch login state
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/me');
+        const data = await res.json();
+        if (res.ok) setMe(data);
+        else setMe(null);
+      } catch {
+        setMe(null);
+      }
+    })();
+  }, [pathname]);
+
+  // NEW: logout
+  async function logout() {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    window.location.href = '/';
+  }
+
+  const isAdmin = me?.role === 'admin';
+  const isUser = !!me && !isAdmin;
 
   return (
     <header className="sticky top-0 z-50 backdrop-blur border-b border-white/10">
@@ -43,7 +69,7 @@ export default function Navbar() {
 
         {/* Desktop links */}
         <nav className="ml-auto hidden md:flex items-center gap-4">
-          {links.map(l => {
+          {links.map((l) => {
             const active = pathname === l.href;
             return (
               <Link
@@ -63,19 +89,58 @@ export default function Navbar() {
           <button
             type="button"
             className="md:hidden px-3 py-2 rounded-xl border border-white/20 hover:bg-white/10 text-sm"
-            onClick={() => setOpen(v => !v)}
+            onClick={() => setOpen((v) => !v)}
             aria-expanded={open}
             aria-label="Toggle menu"
           >
             ☰
           </button>
 
-          <Link href="/register" className="px-3 py-2 rounded-xl bg-white text-black text-sm font-medium hover:bg-white/90">
-            Register
-          </Link>
-          <Link href="/login" className="px-3 py-2 rounded-xl border border-white/20 text-sm hover:bg-white/10">
-            Login
-          </Link>
+          {/* Logged OUT: show Register + Login */}
+          {!me && (
+            <>
+              <Link
+                href="/register"
+                className="px-3 py-2 rounded-xl bg-white text-black text-sm font-medium hover:bg-white/90"
+              >
+                Register
+              </Link>
+              <Link
+                href="/login"
+                className="px-3 py-2 rounded-xl border border-white/20 text-sm hover:bg-white/10"
+              >
+                Login
+              </Link>
+            </>
+          )}
+
+          {/* Logged IN: show Dashboard/Admin + Logout */}
+          {me && (
+            <>
+              {isAdmin ? (
+                <Link
+                  href="/admin"
+                  className="px-3 py-2 rounded-xl bg-white text-black text-sm font-medium hover:bg-white/90"
+                >
+                  Admin
+                </Link>
+              ) : (
+                <Link
+                  href="/dashboard"
+                  className="px-3 py-2 rounded-xl bg-white text-black text-sm font-medium hover:bg-white/90"
+                >
+                  Dashboard
+                </Link>
+              )}
+
+              <button
+                onClick={logout}
+                className="px-3 py-2 rounded-xl border border-white/20 text-sm hover:bg-white/10"
+              >
+                Logout
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -83,7 +148,7 @@ export default function Navbar() {
       {open && (
         <div className="md:hidden border-t border-white/10">
           <div className="mx-auto max-w-6xl px-4 py-3 grid gap-2">
-            {links.map(l => {
+            {links.map((l) => {
               const active = pathname === l.href;
               return (
                 <Link
@@ -97,6 +162,48 @@ export default function Navbar() {
                 </Link>
               );
             })}
+
+            {/* Optional: actions also inside mobile dropdown */}
+            {!me ? (
+              <>
+                <Link
+                  href="/register"
+                  className="px-3 py-2 rounded-xl bg-white text-black text-sm font-medium hover:bg-white/90"
+                >
+                  Register
+                </Link>
+                <Link
+                  href="/login"
+                  className="px-3 py-2 rounded-xl border border-white/20 text-sm hover:bg-white/10"
+                >
+                  Login
+                </Link>
+              </>
+            ) : (
+              <>
+                {isAdmin ? (
+                  <Link
+                    href="/admin"
+                    className="px-3 py-2 rounded-xl bg-white text-black text-sm font-medium hover:bg-white/90"
+                  >
+                    Admin
+                  </Link>
+                ) : (
+                  <Link
+                    href="/dashboard"
+                    className="px-3 py-2 rounded-xl bg-white text-black text-sm font-medium hover:bg-white/90"
+                  >
+                    Dashboard
+                  </Link>
+                )}
+                <button
+                  onClick={logout}
+                  className="px-3 py-2 rounded-xl border border-white/20 text-sm hover:bg-white/10 text-left"
+                >
+                  Logout
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}
