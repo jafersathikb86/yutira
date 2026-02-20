@@ -184,12 +184,6 @@ export default function AdminPage() {
       <div className="card p-6">
         <div className="flex items-center justify-between gap-3">
           <div className="text-sm text-white/70">Logged in as admin</div>
-          <button
-            onClick={logout}
-            className="px-3 py-2 rounded-xl border border-white/20 hover:bg-white/10 text-sm"
-          >
-            Logout
-          </button>
         </div>
 
         {/* NEW: Quick Filters */}

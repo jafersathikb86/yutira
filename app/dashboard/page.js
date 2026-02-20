@@ -97,9 +97,6 @@ export default function DashboardPage() {
                 <div className="text-sm text-white/70">YUTIRA ID: <span className="text-white">{me.yutiraId}</span></div>
                 <div className="text-sm text-white/70">Email: {me.email}</div>
               </div>
-              <button onClick={logout} className="px-3 py-2 rounded-xl border border-white/20 hover:bg-white/10 text-sm">
-                Logout
-              </button>
             </div>
 
             <div className="mt-4 p-3 rounded-xl bg-white/5 border border-white/10 text-sm text-white/80">
