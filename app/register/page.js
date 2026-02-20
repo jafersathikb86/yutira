@@ -24,10 +24,17 @@ export default function RegisterPage() {
     general: true,
     workshop: false
   });
+
+  // NEW: toggle for manual college entry (moves "not listed" outside)
+  const [useOtherCollege, setUseOtherCollege] = useState(false);
+
   const [status, setStatus] = useState({ type: '', message: '' });
   const [submitting, setSubmitting] = useState(false);
 
-  const isPSG = useMemo(() => form.email.toLowerCase().endsWith(psgEmailSuffix), [form.email]);
+  const isPSG = useMemo(
+    () => form.email.toLowerCase().endsWith(psgEmailSuffix),
+    [form.email]
+  );
 
   const feePreview = useMemo(() => {
     let total = 0;
@@ -45,11 +52,18 @@ export default function RegisterPage() {
       return;
     }
 
+    // NEW: ensure college is correctly picked from either field
+    const finalCollege = (useOtherCollege ? form.otherCollege : form.college).trim();
+    if (!finalCollege) {
+      setStatus({ type: 'error', message: 'Please enter your college/university.' });
+      return;
+    }
+
     setSubmitting(true);
     try {
       const payload = {
         ...form,
-        college: form.college === '__other__' ? form.otherCollege : form.college
+        college: finalCollege
       };
 
       const res = await fetch('/api/auth/register', {
@@ -99,7 +113,9 @@ export default function RegisterPage() {
 
         <form onSubmit={onSubmit} className="grid md:grid-cols-2 gap-4">
           <div>
-            <label className="text-sm text-white/80">Name <span className="text-red-300">*</span> (as per your college ID)</label>
+            <label className="text-sm text-white/80">
+              Name <span className="text-red-300">*</span> (as per your college ID)
+            </label>
             <input
               className="mt-2 w-full px-3 py-3 rounded-xl bg-white/5 border border-white/15"
               value={form.name}
@@ -109,7 +125,9 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="text-sm text-white/80">Email <span className="text-red-300">*</span></label>
+            <label className="text-sm text-white/80">
+              Email <span className="text-red-300">*</span>
+            </label>
             <input
               type="email"
               className="mt-2 w-full px-3 py-3 rounded-xl bg-white/5 border border-white/15"
@@ -118,14 +136,20 @@ export default function RegisterPage() {
               required
             />
             {isPSG ? (
-              <div className="mt-1 text-xs text-green-200">PSG email detected — PSG general fee will apply.</div>
+              <div className="mt-1 text-xs text-green-200">
+                PSG email detected — PSG general fee will apply.
+              </div>
             ) : (
-              <div className="mt-1 text-xs text-white/60">External participants can use any email.</div>
+              <div className="mt-1 text-xs text-white/60">
+                External participants can use any email.
+              </div>
             )}
           </div>
 
           <div>
-            <label className="text-sm text-white/80">Phone number <span className="text-red-300">*</span></label>
+            <label className="text-sm text-white/80">
+              Phone number <span className="text-red-300">*</span>
+            </label>
             <input
               className="mt-2 w-full px-3 py-3 rounded-xl bg-white/5 border border-white/15"
               value={form.phone}
@@ -134,21 +158,29 @@ export default function RegisterPage() {
             />
           </div>
 
+          {/* ✅ UPDATED: Searchable college + "not listed" outside */}
           <div>
-            <label className="text-sm text-white/80">College/University <span className="text-red-300">*</span></label>
-            <select
-              className="mt-2 w-full px-3 py-3 rounded-xl bg-white/5 border border-white/15"
-              value={form.college}
-              onChange={(e) => setForm({ ...form, college: e.target.value })}
-              required
-            >
-              <option value="" disabled>Select…</option>
-              {colleges.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-              <option value="__other__">My college is not listed above</option>
-            </select>
-            {form.college === '__other__' ? (
+            <label className="text-sm text-white/80">
+              College/University <span className="text-red-300">*</span>
+            </label>
+
+            {!useOtherCollege ? (
+              <>
+                <input
+                  className="mt-2 w-full px-3 py-3 rounded-xl bg-white/5 border border-white/15"
+                  placeholder="Type to search your college…"
+                  list="college-list"
+                  value={form.college}
+                  onChange={(e) => setForm({ ...form, college: e.target.value })}
+                  required
+                />
+                <datalist id="college-list">
+                  {colleges.map((c) => (
+                    <option key={c} value={c} />
+                  ))}
+                </datalist>
+              </>
+            ) : (
               <input
                 className="mt-2 w-full px-3 py-3 rounded-xl bg-white/5 border border-white/15"
                 placeholder="Enter your college name"
@@ -156,41 +188,69 @@ export default function RegisterPage() {
                 onChange={(e) => setForm({ ...form, otherCollege: e.target.value })}
                 required
               />
-            ) : null}
+            )}
+
+            <label className="mt-2 flex items-center gap-2 text-xs text-white/70">
+              <input
+                type="checkbox"
+                checked={useOtherCollege}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+                  setUseOtherCollege(checked);
+                  if (checked) setForm((prev) => ({ ...prev, college: '' }));
+                  else setForm((prev) => ({ ...prev, otherCollege: '' }));
+                }}
+              />
+              My college is not listed above (enter manually)
+            </label>
           </div>
 
           <div>
-            <label className="text-sm text-white/80">Branch <span className="text-red-300">*</span></label>
+            <label className="text-sm text-white/80">
+              Branch <span className="text-red-300">*</span>
+            </label>
             <select
               className="mt-2 w-full px-3 py-3 rounded-xl bg-white/5 border border-white/15"
               value={form.department}
               onChange={(e) => setForm({ ...form, department: e.target.value })}
               required
             >
-              <option value="" disabled>Select…</option>
+              <option value="" disabled>
+                Select…
+              </option>
               {departments.map((d) => (
-                <option key={d} value={d}>{d}</option>
+                <option key={d} value={d}>
+                  {d}
+                </option>
               ))}
             </select>
           </div>
 
           <div>
-            <label className="text-sm text-white/80">Year <span className="text-red-300">*</span></label>
+            <label className="text-sm text-white/80">
+              Year <span className="text-red-300">*</span>
+            </label>
             <select
               className="mt-2 w-full px-3 py-3 rounded-xl bg-white/5 border border-white/15"
               value={form.year}
               onChange={(e) => setForm({ ...form, year: e.target.value })}
               required
             >
-              <option value="" disabled>Select a year</option>
+              <option value="" disabled>
+                Select a year
+              </option>
               {years.map((y) => (
-                <option key={y} value={y}>{y}</option>
+                <option key={y} value={y}>
+                  {y}
+                </option>
               ))}
             </select>
           </div>
 
           <div>
-            <label className="text-sm text-white/80">Password <span className="text-red-300">*</span></label>
+            <label className="text-sm text-white/80">
+              Password <span className="text-red-300">*</span>
+            </label>
             <input
               type="password"
               className="mt-2 w-full px-3 py-3 rounded-xl bg-white/5 border border-white/15"
