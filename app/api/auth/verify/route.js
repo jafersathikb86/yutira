@@ -12,7 +12,7 @@ export async function GET(req) {
   const token = searchParams.get('token');
 
   if (!token) {
-    return NextResponse.redirect(new URL('/login?verified=0', req.url));
+    return NextResponse.redirect(new URL('/login?verified=0', process.env.APP_URL));
   }
 
   await dbConnect();
@@ -24,7 +24,7 @@ export async function GET(req) {
   });
 
   if (!user) {
-    return NextResponse.redirect(new URL('/login?verified=0', req.url));
+    return NextResponse.redirect(new URL('/login?verified=0', process.env.APP_URL));
   }
 
   if (!user.emailVerified) {
@@ -62,5 +62,5 @@ export async function GET(req) {
     }
   }
 
-  return NextResponse.redirect(new URL('/login?verified=1', req.url));
+  return NextResponse.redirect(new URL('/login?verified=1', process.env.APP_URL));
 }
