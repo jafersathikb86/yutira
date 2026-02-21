@@ -60,7 +60,7 @@ export async function POST(req) {
     emailVerified: false
   });
 
-  const baseUrl = process.env.APP_URL || 'https://yutira.psgtech.ac.in/';
+  const baseUrl = process.env.APP_URL || 'https://yutira.psgtech.ac.in';
   const verifyUrl = `${baseUrl}/api/auth/verify?token=${token}`;
 
   const contentHtml =
