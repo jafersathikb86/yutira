@@ -223,7 +223,7 @@ export default function DashboardPage() {
                       required
                     />
                     <div className="mt-1 text-xs text-white/60">
-                      Note: Set sharing to Anyone with link can view, and you can submit only once, it is irreversible.
+                      Note: Make sure the Google Drive File link is set to 'Anyone with the link can view'.
                     </div>
                   </div>
 
