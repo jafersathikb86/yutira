@@ -217,13 +217,13 @@ export default function DashboardPage() {
                     <label className="text-sm text-white/80">Abstract PDF URL</label>
                     <input
                       className="mt-2 w-full px-3 py-3 rounded-xl bg-white/5 border border-white/15"
-                      placeholder="Upload PDF in Google Drive or Cloudinary and paste the share link"
+                      placeholder="Upload PDF in Google Drive and paste the share link"
                       value={paperForm.pdfUrl}
                       onChange={(e) => setPaperForm({ ...paperForm, pdfUrl: e.target.value })}
                       required
                     />
                     <div className="mt-1 text-xs text-white/60">
-                      Note: You can submit only once, it is irreversible.
+                      Note: Set sharing to Anyone with link can view, and you can submit only once, it is irreversible.
                     </div>
                   </div>
 
