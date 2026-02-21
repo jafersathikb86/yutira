@@ -35,7 +35,8 @@ export default function Footer() {
           <div>Vinoth Kumar S</div>
           <div>80728 99952</div><br/>
 <div className="font-semibold text-white mb-2">Developer</div>
-<div>Jafer Sathik B</div>
+<div>Jafer Sathik B</div><br/>
+<div>24i464@psgtech.ac.in</div>
 </div>
 </div>
 <div className="py-4 text-center text-xs text-white/50 border-t border-white/10">
