@@ -35,7 +35,7 @@ export default function Footer() {
           <div>Vinoth Kumar S</div>
           <div>80728 99952</div><br/>
 <div className="font-semibold text-white mb-2">Developer</div>
-<div>Jafer Sathik B</div><br/>
+<div>Jafer Sathik B</div>
 <div>24i464@psgtech.ac.in</div>
 </div>
 </div>
