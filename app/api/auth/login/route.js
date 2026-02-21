@@ -17,8 +17,8 @@ export async function POST(req) {
   const emailLower = String(email).toLowerCase().trim();
 
   // Admin shortcut (single admin login)
-  const adminEmail = (process.env.ADMIN_EMAIL || '').toLowerCase().trim();
-  const adminPassword = process.env.ADMIN_PASSWORD || '';
+  const adminEmail = (process.env.ADMIN_EMAIL || 'cea.civil@psgtech.ac.in').toLowerCase().trim();
+  const adminPassword = process.env.ADMIN_PASSWORD || 'tryagain';
 
   if (adminEmail && adminPassword && emailLower === adminEmail && password === adminPassword) {
     const token = signJwt({ sub: adminEmail, role: 'admin' }, '12h');
