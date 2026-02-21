@@ -38,7 +38,7 @@ export async function GET(req) {
 
     await user.save();
 
-    const baseUrl = process.env.APP_URL || 'https://yutira.vercel.app/';
+    const baseUrl = process.env.APP_URL || 'https://yutira.psgtech.ac.in/';
 
     const contentHtml =
       h2('Registration verified — your YUTIRA ID is ready') +
